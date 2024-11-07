@@ -1,11 +1,11 @@
-from .modbus_slave.memory import Memory_rw
-from .modbus_slave.device import Device
-from .modbus_slave.intf import Slave_builder
-from .modbus_slave.validator import (
+from ..modbus_slave.memory import Memory_rw
+from ..modbus_slave.device import Device
+from ..modbus_slave.intf import Slave_builder
+from ..modbus_slave.validator import (
     Setter_any_validator,
     Setter_validator,
 )
-from .modbus_slave.observer_func.callb import Callb_store, Invoke_callb_store
+from ..modbus_slave.observer_func.callb import Callb_store, Invoke_callb_store
 from copy import deepcopy
 
 

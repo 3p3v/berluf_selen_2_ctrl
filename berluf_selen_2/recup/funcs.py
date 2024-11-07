@@ -1,23 +1,23 @@
 from enum import Enum
 from typing import Callable, override
 
-from .modbus_slave.validator import (
+from ..modbus_slave.validator import (
     Bigger_equal_handler,
     Equal_handler,
     Many_handler,
     One_of_handler,
     Smaller_equal_handler,
 )
-from .modbus_slave.observer_func.func import Device_func
-from .modbus_slave.func import (
+from ..modbus_slave.observer_func.func import Device_func
+from ..modbus_slave.func import (
     Multi_func,
     Common_func,
     Persistant,
     Persistant_executor,
     Timeout_manager,
 )
-from .modbus_slave.device import Device
-from .modbus_slave.timer import Timer_factory
+from ..modbus_slave.device import Device
+from ..modbus_slave.timer import Timer_factory
 
 
 class Recup_persistant(Persistant):

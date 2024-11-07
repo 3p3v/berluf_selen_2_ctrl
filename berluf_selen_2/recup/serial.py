@@ -1,10 +1,10 @@
 from typing import Tuple, override
 
-from .modbus_slave.observer_func.callb import Callb_store, Invoke_callb_store
-from .modbus_slave.validator import Setter_validator
-from .modbus_slave.intf import Device_buildable_intf
-from .modbus_slave.serial import Serial_conf, Device_serial_intf_factory
-from .modbus_slave.memory import Memory_rw
+from ..modbus_slave.validator import Setter_validator
+from ..modbus_slave.intf import Device_buildable_intf, Device_async_intf
+from ..modbus_slave.serial import Serial_conf, Device_serial_intf_factory
+from ..modbus_slave.memory import Memory_rw
+from ..modbus_slave.observer_func.callb import Callb_store, Invoke_callb_store
 
 
 class Recup_serial_intf(Device_buildable_intf):  # TODO
@@ -15,7 +15,7 @@ class Recup_serial_intf(Device_buildable_intf):  # TODO
         com: str,
         impl_builder: Device_serial_intf_factory,
     ):
-        self._impl = impl_builder.create_intf(Serial_conf(com, 9600, 1, 8, "O"))
+        self._impl = impl_builder.create_intf(Serial_conf(com, 9600, 1, 8, "N")) # Has to be odd
         return
 
     @override
@@ -75,9 +75,9 @@ class Recup_serial_intf(Device_buildable_intf):  # TODO
         return self._impl.create_slave()
 
     @override
-    async def connect(self) -> None:
-        await self._impl.connect()
+    async def connect(self) -> tuple[Device_async_intf.Exit_reason, Exception | None]:
+        return await self._impl.connect()
 
     @override
     async def disconnect(self) -> None:
-        await self._impl.disconnect()
+        return await self._impl.disconnect()

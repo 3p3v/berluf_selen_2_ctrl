@@ -1,10 +1,11 @@
+from enum import Enum
+
 from .observer_func.callb import (
     Callb_store,
     Invoke_callb_store,
 )
 from .validator import (
     Setter_validator,
-    Validator,
 )
 from .memory import Memory_rw
 
@@ -91,8 +92,15 @@ class Slave_builder:
         raise NotImplementedError()
 
 
-class Device_intf:
+class Device_async_intf:
     """Base for modbus device connectivity interface."""
+    class Exit_reason(Enum):
+        """Reason why connection ended."""
+        ALREADY_STARTED = 0
+        SHUTDOWN_REQUESTED = 1
+        CONNECTION_ERROR = 2
+        STARTUP_ERROR = 3
+        INNER_ERROR = 4
 
     async def connect(self) -> None:
         """Connect to the interface."""
@@ -103,5 +111,6 @@ class Device_intf:
         raise NotImplementedError()
 
 
-class Device_buildable_intf(Slave_builder, Device_intf):
-    """Slave_builder and Device_intf combined for convinience."""
+class Device_buildable_intf(Slave_builder, Device_async_intf):
+    """Slave_builder and Device_async_intf combined for convinience."""
+

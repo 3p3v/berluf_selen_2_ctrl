@@ -3,7 +3,7 @@ from ...modbus_slave.observer_func.callb import (
     Invoke_callb_store,
 )
 from ...modbus_slave.validator import Setter_validator
-from ...modbus_slave.intf import Device_buildable_intf
+from ...modbus_slave.intf import Device_buildable_intf, Device_async_intf
 from ...modbus_slave.serial import Serial_conf, Device_serial_intf_factory
 from .memory import Pymodbus_memory
 from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
@@ -12,59 +12,6 @@ from pymodbus.server import ModbusSerialServer
 import asyncio
 from asyncio import Event
 from typing import Callable, override
-
-
-class Pymodbus_serial_server(ModbusSerialServer):
-    def __init__(
-        self,
-        connect_callb: Callable[[], None],
-        disconnect_callb: Callable[[Exception | None], None],
-        *args,
-        **kwargs,
-    ):
-        super().__init__(*args, **kwargs)
-        self._disconnect_event = Event()
-        self._connect_callb = connect_callb
-        self._disconnect_callb = disconnect_callb
-        self._task = None
-
-    def callback_connected(self) -> None:
-        """Call when connection is succcesfull."""
-        self._connect_callb()
-        # TODO fix
-
-    def callback_disconnected(self, exc: Exception | None) -> None:
-        """Call when connection is lost."""
-        self._disconnect_callb(exc)
-        self._disconnect_event.set()
-
-    # async def _run_connect(self):
-    #     # await self.serve_forever()
-    #     try:
-    #         await self.serve_forever()
-    #     except Exception as ec:
-    #         self.callback_disconnected(ec)
-
-    #     self.callback_disconnected(None)
-
-    # async def _wait(self, timeout: int):
-    #     await asyncio.sleep(timeout)
-
-    async def run_connect(self):
-        if self._task is None:
-            self._task = asyncio.ensure_future(self.serve_forever())
-            # if self._disconnect_event.is_set():  # TODO FIX
-        else:
-            raise RuntimeError(f"Could not connect to interface.")
-
-    async def run_disconnect(self):
-        if self._task is not None:
-            await self.shutdown()  # FIXME
-            self._task.cancel()
-            self._task = None
-        else:
-            raise RuntimeError(f"Could not disconnect from interface.")
-        # await self._disconnect_event.wait()
 
 
 class Pymodbus_intf(Device_buildable_intf):
@@ -183,52 +130,52 @@ class Pymodbus_intf(Device_buildable_intf):
         )
 
 
+class Pymodbus_serial_server(ModbusSerialServer):
+    """Imlementation of serial modbus connection."""
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+
+    async def run_connect(self) -> tuple[ModbusSerialServer.Exit_reason, Exception | None]:
+        return await self.serve_forever()
+
+    async def run_disconnect(self) -> None:
+        return await self.shutdown()
+
+
 class Pymodbus_serial_intf(Pymodbus_intf):
     def __init__(
         self,
-        connect_callb: Callable[[], None],
-        disconnect_callb: Callable[[Exception | None], None],
         conf: Serial_conf = Serial_conf(),
     ):
         super().__init__()
-        self._connect_callb = connect_callb
-        self._disconnect_callb = disconnect_callb
         self._conf = conf
 
     @override
-    async def connect(self) -> None:
+    async def connect(self) -> tuple[Device_async_intf.Exit_reason, Exception | None]:
         self._context = ModbusServerContext(slaves=self._store, single=False)
         self._server = Pymodbus_serial_server(
-            connect_callb=self._connect_callb,
-            disconnect_callb=self._disconnect_callb,
             context=self._context,  # Data storage
-            # identity=args.identity,  # server identify
-            # timeout=1,  # waiting time for request to complete
             port=self._conf.com,  # serial port
-            # custom_functions=[],  # allow custom handling
-            # framer=args.framer,  # The framer strategy to use
             stopbits=self._conf.stop_bits,  # The number of stop bits to use
             bytesize=self._conf.char_size,  # The bytesize of the serial messages
             parity=self._conf.parity,  # Which kind of parity to use
             baudrate=self._conf.baud_rate,  # The baud rate to use for the serial device
-            # handle_local_echo=False,  # Handle local echo of the USB-to-RS485 adaptor
-            # ignore_missing_slaves=True,  # ignore request to a missing slave
-            # broadcast_enable=False,  # treat slave_id 0 as broadcast address,
         )
-        await self._server.run_connect()
-        return
+        (er, exc) = await self._server.run_connect()
+        return Device_async_intf.Exit_reason(er.value), exc
 
     @override
     async def disconnect(self) -> None:
         await self._server.run_disconnect()
 
 
-# %%
 class Pymodbus_serial_intf_factory(Device_serial_intf_factory):
     def create_intf(
         self,
-        connect_callb: Callable[[], None],
-        disconnect_callb: Callable[[Exception | None], None],
         conf: Serial_conf,
     ) -> Device_buildable_intf:
-        return Pymodbus_serial_intf(connect_callb, disconnect_callb, conf)
+        return Pymodbus_serial_intf(conf)

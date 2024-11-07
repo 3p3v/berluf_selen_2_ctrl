@@ -2,9 +2,9 @@
 
 import pytest
 
-from ..modbus_slave.observer_func.func import Device_func
+from ...modbus_slave.observer_func.func import Device_func
 
-from ..modbus_slave.tests.dummies import Dummy_serial_intf_factory, Dummy_timer_factory
+from ...modbus_slave.tests.dummies import Dummy_serial_intf_factory, Dummy_timer_factory
 from ..serial import Recup_serial_intf
 from ..device import Recup_device
 from .. import funcs as func

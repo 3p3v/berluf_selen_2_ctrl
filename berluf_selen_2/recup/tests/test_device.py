@@ -2,7 +2,7 @@
 
 import pytest
 
-from ..modbus_slave.tests.dummies import (
+from ...modbus_slave.tests.dummies import (
     Dummy_serial_intf_factory,
 )
 
