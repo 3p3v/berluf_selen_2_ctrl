@@ -102,7 +102,7 @@ class Device_async_intf:
         STARTUP_ERROR = 3
         INNER_ERROR = 4
 
-    async def connect(self) -> None:
+    async def connect(self) -> Exit_reason:
         """Connect to the interface."""
         raise NotImplementedError()
 

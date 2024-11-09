@@ -193,7 +193,7 @@ class Fan_base:  # TODO should exhaust's val be checked?
         raise NotImplementedError()
 
 
-# %%
+
 class Exhaust_fan(Multi_func, Fan_base):
     _addr = Fan_base._addr_exhaust
 
@@ -351,7 +351,7 @@ class Supply_fan(Common_func, Fan_base):
         return self._device.holding_registers.get_single_val(self._addr)
 
 
-# %%
+
 class GWC(Common_func):
     _addr: int = 64
 
@@ -380,7 +380,7 @@ class GWC(Common_func):
         return bool(self._device.holding_registers.get_single_val(self._addr))
 
 
-# %%
+
 class Heater_cooler(Common_func):
     class Mode(Enum):
         Cool = 0
@@ -438,7 +438,7 @@ class Recup_timeout_manager(Timeout_manager):
         )
 
 
-# %%
+
 class Error(Multi_func):
     class Error(Enum):
         """All possible errors"""

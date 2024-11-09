@@ -75,7 +75,7 @@ class Recup_serial_intf(Device_buildable_intf):  # TODO
         return self._impl.create_slave()
 
     @override
-    async def connect(self) -> tuple[Device_async_intf.Exit_reason, Exception | None]:
+    async def connect(self) -> Device_async_intf.Exit_reason:
         return await self._impl.connect()
 
     @override

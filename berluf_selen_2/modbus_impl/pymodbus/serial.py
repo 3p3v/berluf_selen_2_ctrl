@@ -139,7 +139,7 @@ class Pymodbus_serial_server(ModbusSerialServer):
     ):
         super().__init__(*args, **kwargs)
 
-    async def run_connect(self) -> tuple[ModbusSerialServer.Exit_reason, Exception | None]:
+    async def run_connect(self) -> ModbusSerialServer.Exit_reason:
         return await self.serve_forever()
 
     async def run_disconnect(self) -> None:
@@ -155,7 +155,7 @@ class Pymodbus_serial_intf(Pymodbus_intf):
         self._conf = conf
 
     @override
-    async def connect(self) -> tuple[Device_async_intf.Exit_reason, Exception | None]:
+    async def connect(self) -> Device_async_intf.Exit_reason:
         self._context = ModbusServerContext(slaves=self._store, single=False)
         self._server = Pymodbus_serial_server(
             context=self._context,  # Data storage
@@ -165,8 +165,8 @@ class Pymodbus_serial_intf(Pymodbus_intf):
             parity=self._conf.parity,  # Which kind of parity to use
             baudrate=self._conf.baud_rate,  # The baud rate to use for the serial device
         )
-        (er, exc) = await self._server.run_connect()
-        return Device_async_intf.Exit_reason(er.value), exc
+        await self._server.run_connect()
+        return Device_async_intf.Exit_reason(self._server.serving.result().value)
 
     @override
     async def disconnect(self) -> None:
