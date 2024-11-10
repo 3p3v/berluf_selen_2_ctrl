@@ -75,9 +75,13 @@ class Recup_serial_intf(Device_buildable_intf):  # TODO
         return self._impl.create_slave()
 
     @override
-    async def connect(self) -> Device_async_intf.Exit_reason:
-        return await self._impl.connect()
+    async def connect(self) -> None:
+        await self._impl.connect()
 
     @override
     async def disconnect(self) -> None:
         return await self._impl.disconnect()
+    
+    @override
+    def get_state(self) -> Device_async_intf.State:
+        return self._impl.get_state()

@@ -1,3 +1,4 @@
+import copy
 from enum import Enum
 from typing import Callable, override
 
@@ -186,14 +187,14 @@ class Fan_base:  # TODO should exhaust's val be checked?
 
     def get(self) -> int:
         """Get speed in %."""
-        self._conv._from_real_to_conv(self._get())
+        return self._conv._from_real_to_conv(self._get())
 
     def _get(self) -> int:
         """Get speed in %."""
         raise NotImplementedError()
 
 
-
+# %%
 class Exhaust_fan(Multi_func, Fan_base):
     _addr = Fan_base._addr_exhaust
 
@@ -351,7 +352,7 @@ class Supply_fan(Common_func, Fan_base):
         return self._device.holding_registers.get_single_val(self._addr)
 
 
-
+# %%
 class GWC(Common_func):
     _addr: int = 64
 
@@ -380,7 +381,7 @@ class GWC(Common_func):
         return bool(self._device.holding_registers.get_single_val(self._addr))
 
 
-
+# %%
 class Heater_cooler(Common_func):
     class Mode(Enum):
         Cool = 0
@@ -438,7 +439,7 @@ class Recup_timeout_manager(Timeout_manager):
         )
 
 
-
+# %%
 class Error(Multi_func):
     class Error(Enum):
         """All possible errors"""
@@ -489,38 +490,58 @@ class Error(Multi_func):
     # Error visible on the screen
     _addr_vis: int = 276
 
-    def _set_change_callb_err(self, addr: int, _val: list) -> None:
-        """Callbacks run when registry state changes."""
+    def _set_change_callb_err_helper(self, addr: int, _val: list) -> bool:
         val: int = _val[0]
-        ecs: set[Error.Error] = set()
+        ecs = copy.deepcopy(self._ecs)
         rec = Error.Visible_error.OK.value
 
         if val & Error.Recup_error.P1.value:
             ecs.add(Error.Error.P1)
-            rec = Error.Visible_error.P1.value
+            rec |= Error.Visible_error.P1.value
+        else:
+            ecs.discard(Error.Error.P1)
 
         if val & Error.Recup_error.P2.value:
             ecs.add(Error.Error.P2)
-            rec = Error.Visible_error.P2.value
+            rec |= Error.Visible_error.P2.value
+        else:
+            ecs.discard(Error.Error.P2)
 
         if val & Error.Recup_error.E1.value:
             ecs.add(Error.Error.E1)
-            rec = Error.Visible_error.E1.value
+            rec |= Error.Visible_error.E1.value
+        else:
+            ecs.discard(Error.Error.E1)
 
         if val & Error.Recup_error.E7.value:
             ecs.add(Error.Error.E7)
+        else:
+            ecs.discard(Error.Error.E7)
 
-        if self._ecs != ecs:
+        self._holding_registers_setter.set_single_val(self._addr_vis, rec)
+        if ecs == self._ecs:
+            return False
+        else:
             self._ecs = ecs
-            self._holding_registers_setter.set_single_val(self._addr_vis, rec)
-            self._usr_callback(list(ecs))
+            return True
 
-    def _set_change_callb_0X(self, val: list, ec: Error) -> None:
+    def _set_change_callb_err(self, addr: int, _val: list) -> None:
+        """Callbacks run when registry state changes."""
+        if self._set_change_callb_err_helper(addr, _val):
+            self._usr_callback(list(self._ecs))
+
+    def _set_change_callb_0X_helper(self, val: list, ec: Error) -> bool:
         if val[0] == self._EX:
             self._ecs.add(ec)
-            self._usr_callback(list(self._ecs))
+            return True
         elif ec in self._ecs:
-            self._ecs.discard(ec)
+            self._ecs.remove(ec)
+            return True
+
+        return False
+
+    def _set_change_callb_0X(self, val: list, ec: Error) -> None:
+        if self._set_change_callb_0X_helper(val, ec):
             self._usr_callback(list(self._ecs))
 
     def _set_change_callb_01(self, addr: int, val: list) -> None:
@@ -539,12 +560,14 @@ class Error(Multi_func):
         self._set_change_callb_0X(val, Error.Error.E6)
 
     def _timeout_callb(self) -> None:
-        self._ecs.add(Error.Error.E8)
-        self._usr_callback(list(self._ecs))
+        if Error.Error.E8 not in self._ecs:
+            self._ecs.add(Error.Error.E8)
+            self._usr_callback(list(self._ecs))
 
     def _reset_callb(self) -> None:
-        self._ecs.discard(Error.Error.E8)
-        self._usr_callback(list(self._ecs))
+        if Error.Error.E8 in self._ecs:
+            self._ecs.discard(Error.Error.E8)
+            self._usr_callback(list(self._ecs))
 
     def __init__(
         self,
@@ -603,30 +626,15 @@ class Error(Multi_func):
     def reset(self) -> list:
         """Reset errors on monitor."""
         # Refresh error list
-        self._set_change_callb_err(
+        self._set_change_callb_err_helper(
             self._addr_err,
             [self._device.holding_registers.get_single_val(self._addr_err)],
         )
-        self._set_change_callb_01(
-            self._addr_01,
-            [self._device.holding_registers.get_single_val(self._addr_01)],
-        )
-        self._set_change_callb_02(
-            self._addr_02,
-            [self._device.holding_registers.get_single_val(self._addr_02)],
-        )
-        self._set_change_callb_03(
-            self._addr_03,
-            [self._device.holding_registers.get_single_val(self._addr_03)],
-        )
-        self._set_change_callb_04(
-            self._addr_04,
-            [self._device.holding_registers.get_single_val(self._addr_04)],
-        )
-        self._set_change_callb_05(
-            self._addr_05,
-            [self._device.holding_registers.get_single_val(self._addr_05)],
-        )
+        for a, e in zip([self._addr_01 ,self._addr_02, self._addr_03, self._addr_04, self._addr_05],  [self.Error.E2, self.Error.E3, self.Error.E4, self.Error.E5, self.Error.E6]):
+            self._set_change_callb_0X_helper(
+                [self._device.holding_registers.get_single_val(a)],
+                e
+            )
 
         return list(self._ecs)
 

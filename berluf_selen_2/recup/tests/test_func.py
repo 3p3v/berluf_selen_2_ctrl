@@ -110,6 +110,10 @@ class Test_error(Base_test_func):
 
         self.timers.get_last_timer().fire()
         assert fixt.get() == [func.Error.Error.E8]
+        fixt.reset()
+        assert fixt.get() == [func.Error.Error.E8]
+        fixt._timer.callb()
+        assert fixt.get() == []
 
     def test_clean(self, fixt: func.Error) -> None:
         """Check if user can delete errors."""

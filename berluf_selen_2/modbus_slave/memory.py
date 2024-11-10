@@ -55,12 +55,32 @@ class Memory:
         self, addr: int, val: list[int], invoker: Observer_func | None
     ) -> None:
         self._setter_validator.validate_vals(addr, val)
+        run_callbs = self._get_multi_val(addr, len(val))
         self._set_multi_val(addr, val)
-        for a, v, o in zip(
-            range(addr, addr + len(val)), val, self._get_multi_val(addr, len(val))
-        ):
-            if v != o:
-                self._callbs.run_callbs(a, [v], invoker)
+        # Run callbacks if anything changed
+        self._run_callbs_if_changed(addr, val, run_callbs)
+                
+    def _run_callbs_if_changed(self, address: int, vals: list[int], current: list[int]):
+        run_callbs = [r != v for r, v in zip(current, vals)]
+        if all(run_callbs):
+            # All values changed
+            self._callbs.run_callbs(address, vals)
+        else:
+            # Run only callbacks for addresses that changed
+            faddr = address
+            cvals = []
+            for a, v, c in zip(range(address, address + len(vals)), vals, run_callbs):
+                if (c):
+                    cvals.append(v)
+                elif len(cvals):
+                    self._callbs.run_callbs(faddr, cvals)
+                    faddr = a + 1
+                    cvals.clear()
+                else:
+                    faddr = a + 1
+                    
+            if len(cvals):
+                self._callbs.run_callbs(faddr, cvals)
 
     def get_callb_service(self) -> Callb_store:
         """Get callback service used for callbacks running when registry value changes."""

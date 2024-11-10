@@ -61,9 +61,10 @@ class Pymodbus_memory(Memory_rw, ModbusSparseDataBlock):  # TODO change to proxy
     def setValues(self, address, vals):
         """Set the requested values of the datastore."""
         self._master_setter_validator.validate_vals(address, vals)
+        run_callbs = self._get_multi_val(address, len(vals))
         super().setValues(address, vals)
-        # Run callbacks
-        self._callbs.run_callbs(address, vals)
+        # Run callbacks if anything changed
+        self._run_callbs_if_changed(address, vals, run_callbs)  
 
     @override
     def getValues(self, address, count=1):
