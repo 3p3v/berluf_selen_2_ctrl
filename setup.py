@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='berluf_selen_2',
-    version='0.1.5',    
+    version='0.1.6',    
     description='Package for controlling Berluf Selen 2 recuperator.',
     url='https://github.com/3p3v/berluf_selen_2',
     author='Adam Golecki',

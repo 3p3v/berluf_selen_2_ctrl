@@ -188,7 +188,11 @@ class Pymodbus_serial_server(ModbusSerialServer):
     
     def get_state(self) -> Device_async_intf.State:
         return self._state
-
+    
+    async def wait_state_change(self) -> Device_async_intf.State:
+        await self._event.wait()
+        self._event.clear()
+        return self._state
 
 class Pymodbus_serial_intf(Pymodbus_intf):
     def __init__(
@@ -224,7 +228,10 @@ class Pymodbus_serial_intf(Pymodbus_intf):
             return self._server.get_state()
         
         return Device_async_intf.State.NOT_CONNECTED
-
+    
+    @override
+    async def wait_state_change(self) -> Device_async_intf.State:
+        return await self._server.wait_state_change()
 
 class Pymodbus_serial_intf_factory(Device_serial_intf_factory):
     def create_intf(

@@ -85,3 +85,7 @@ class Recup_serial_intf(Device_buildable_intf):  # TODO
     @override
     def get_state(self) -> Device_async_intf.State:
         return self._impl.get_state()
+    
+    @override
+    async def wait_state_change(self) -> Device_async_intf.State:
+        return await self._impl.wait_state_change()

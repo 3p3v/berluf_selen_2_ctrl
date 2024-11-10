@@ -115,6 +115,9 @@ class Device_async_intf:
     
     def get_state(self) -> State:
         raise NotImplementedError()
+    
+    async def wait_state_change(self) -> State:
+        raise NotImplementedError()
 
 
 class Device_buildable_intf(Slave_builder, Device_async_intf):
