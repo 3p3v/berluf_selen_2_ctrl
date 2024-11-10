@@ -139,10 +139,13 @@ class Pymodbus_serial_server(ModbusSerialServer):
     ):
         super().__init__(*args, **kwargs)
         self._state = Device_async_intf.State.NOT_CONNECTED
+        self._event = asyncio.Event()
+        self._task: asyncio.Task | None = None
         
     @override
     def callback_connected(self) -> None:
         self._state = Device_async_intf.State.CONNECTED
+        self._event.set()
         
     @override
     def callback_disconnected(self, exc: Exception | None) -> None:
@@ -151,24 +154,37 @@ class Pymodbus_serial_server(ModbusSerialServer):
             self._state = Device_async_intf.State.DISCONNECTED
         else:
             self._state = Device_async_intf.State.CONNECTION_ERROR
+        self._event.set()
             
     @override
     def callback_inner_error(self, exc: Exception) -> None:
         super().callback_inner_error(exc=exc)
         self._state = Device_async_intf.State.INNER_ERROR
+        self._event.set()
+
+    @override
+    async def serve_forever(self) -> None:
+        await super().serve_forever()
+        self._event.set()
 
     async def run_connect(self) -> None:
         if self._state in (Device_async_intf.State.CONNECTING, Device_async_intf.State.CONNECTED):
             return
             
         self._state = Device_async_intf.State.CONNECTING
-        await self.serve_forever()
+        self._task = asyncio.ensure_future(self.serve_forever())
+        await self._event.wait()
+        self._event.clear()
+        if not self.serving.done():
+            return
         if self.serving.result() == False and self._state == Device_async_intf.State.CONNECTING:
             self._state = Device_async_intf.State.STARTUP_ERROR
         
 
     async def run_disconnect(self) -> None:
-        return await self.shutdown()
+        await self.shutdown()
+        if self._task:
+            await self._task.done()
     
     def get_state(self) -> Device_async_intf.State:
         return self._state
@@ -184,7 +200,7 @@ class Pymodbus_serial_intf(Pymodbus_intf):
         self._server: Pymodbus_serial_server | None = None
 
     @override
-    async def connect(self) -> None:
+    async def connect(self) -> Device_async_intf.State:
         self._context = ModbusServerContext(slaves=self._store, single=False)
         self._server = Pymodbus_serial_server(
             context=self._context,  # Data storage
@@ -195,6 +211,7 @@ class Pymodbus_serial_intf(Pymodbus_intf):
             baudrate=self._conf.baud_rate,  # The baud rate to use for the serial device
         )
         await self._server.run_connect()
+        return self._server.get_state()
 
     @override
     async def disconnect(self) -> None:
