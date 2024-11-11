@@ -64,7 +64,7 @@ class Pymodbus_memory(Memory_rw, ModbusSparseDataBlock):  # TODO change to proxy
         run_callbs = self._get_multi_val(address, len(vals))
         super().setValues(address, vals)
         # Run callbacks if anything changed
-        self._run_callbs_if_changed(address, vals, run_callbs)  
+        self._run_callbs_if_changed(address, vals, run_callbs)
 
     @override
     def getValues(self, address, count=1):

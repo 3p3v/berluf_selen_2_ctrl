@@ -59,7 +59,7 @@ class Memory:
         self._set_multi_val(addr, val)
         # Run callbacks if anything changed
         self._run_callbs_if_changed(addr, val, run_callbs)
-                
+
     def _run_callbs_if_changed(self, address: int, vals: list[int], current: list[int]):
         run_callbs = [r != v for r, v in zip(current, vals)]
         if all(run_callbs):
@@ -70,7 +70,7 @@ class Memory:
             faddr = address
             cvals = []
             for a, v, c in zip(range(address, address + len(vals)), vals, run_callbs):
-                if (c):
+                if c:
                     cvals.append(v)
                 elif len(cvals):
                     self._callbs.run_callbs(faddr, cvals)
@@ -78,7 +78,7 @@ class Memory:
                     cvals.clear()
                 else:
                     faddr = a + 1
-                    
+
             if len(cvals):
                 self._callbs.run_callbs(faddr, cvals)
 

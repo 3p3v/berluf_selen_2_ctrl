@@ -94,9 +94,10 @@ class Slave_builder:
 
 class Device_async_intf:
     """Base for modbus device connectivity interface."""
-    
+
     class State(Enum):
         """Reason why connection ended."""
+
         NOT_CONNECTED = 0
         CONNECTING = 1
         CONNECTED = 2
@@ -112,14 +113,13 @@ class Device_async_intf:
     async def disconnect(self) -> None:
         """Disconnect from the interface."""
         raise NotImplementedError()
-    
+
     def get_state(self) -> State:
         raise NotImplementedError()
-    
+
     async def wait_state_change(self) -> State:
         raise NotImplementedError()
 
 
 class Device_buildable_intf(Slave_builder, Device_async_intf):
     """Slave_builder and Device_async_intf combined for convinience."""
-

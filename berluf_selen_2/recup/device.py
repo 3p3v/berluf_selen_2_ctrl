@@ -9,7 +9,6 @@ from ..modbus_slave.observer_func.callb import Callb_store, Invoke_callb_store
 from copy import deepcopy
 
 
-
 class Recup_device(Device):
     def __init__(
         self,

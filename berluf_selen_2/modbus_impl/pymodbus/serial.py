@@ -132,6 +132,7 @@ class Pymodbus_intf(Device_buildable_intf):
 
 class Pymodbus_serial_server(ModbusSerialServer):
     """Imlementation of serial modbus connection."""
+
     def __init__(
         self,
         *args,
@@ -141,12 +142,12 @@ class Pymodbus_serial_server(ModbusSerialServer):
         self._state = Device_async_intf.State.NOT_CONNECTED
         self._event = asyncio.Event()
         self._task: asyncio.Task | None = None
-        
+
     @override
     def callback_connected(self) -> None:
         self._state = Device_async_intf.State.CONNECTED
         self._event.set()
-        
+
     @override
     def callback_disconnected(self, exc: Exception | None) -> None:
         super().callback_disconnected(exc=exc)
@@ -155,7 +156,7 @@ class Pymodbus_serial_server(ModbusSerialServer):
         else:
             self._state = Device_async_intf.State.CONNECTION_ERROR
         self._event.set()
-            
+
     @override
     def callback_inner_error(self, exc: Exception) -> None:
         super().callback_inner_error(exc=exc)
@@ -168,31 +169,37 @@ class Pymodbus_serial_server(ModbusSerialServer):
         self._event.set()
 
     async def run_connect(self) -> None:
-        if self._state in (Device_async_intf.State.CONNECTING, Device_async_intf.State.CONNECTED):
+        if self._state in (
+            Device_async_intf.State.CONNECTING,
+            Device_async_intf.State.CONNECTED,
+        ):
             return
-            
+
         self._state = Device_async_intf.State.CONNECTING
         self._task = asyncio.ensure_future(self.serve_forever())
         await self._event.wait()
         self._event.clear()
         if not self.serving.done():
             return
-        if self.serving.result() == False and self._state == Device_async_intf.State.CONNECTING:
+        if (
+            self.serving.result() == False
+            and self._state == Device_async_intf.State.CONNECTING
+        ):
             self._state = Device_async_intf.State.STARTUP_ERROR
-        
 
     async def run_disconnect(self) -> None:
         await self.shutdown()
         if self._task:
             await self._task.done()
-    
+
     def get_state(self) -> Device_async_intf.State:
         return self._state
-    
+
     async def wait_state_change(self) -> Device_async_intf.State:
         await self._event.wait()
         self._event.clear()
         return self._state
+
 
 class Pymodbus_serial_intf(Pymodbus_intf):
     def __init__(
@@ -221,17 +228,18 @@ class Pymodbus_serial_intf(Pymodbus_intf):
     async def disconnect(self) -> None:
         if self._server is not None:
             await self._server.run_disconnect()
-            
+
     @override
     def get_state(self) -> Device_async_intf.State:
         if self._server is not None:
             return self._server.get_state()
-        
+
         return Device_async_intf.State.NOT_CONNECTED
-    
+
     @override
     async def wait_state_change(self) -> Device_async_intf.State:
         return await self._server.wait_state_change()
+
 
 class Pymodbus_serial_intf_factory(Device_serial_intf_factory):
     def create_intf(

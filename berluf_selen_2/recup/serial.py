@@ -15,7 +15,9 @@ class Recup_serial_intf(Device_buildable_intf):  # TODO
         com: str,
         impl_builder: Device_serial_intf_factory,
     ):
-        self._impl = impl_builder.create_intf(Serial_conf(com, 9600, 1, 8, "N")) # Has to be odd
+        self._impl = impl_builder.create_intf(
+            Serial_conf(com, 9600, 1, 8, "O")
+        )  # Has to be odd
         return
 
     @override
@@ -81,11 +83,11 @@ class Recup_serial_intf(Device_buildable_intf):  # TODO
     @override
     async def disconnect(self) -> None:
         return await self._impl.disconnect()
-    
+
     @override
     def get_state(self) -> Device_async_intf.State:
         return self._impl.get_state()
-    
+
     @override
     async def wait_state_change(self) -> Device_async_intf.State:
         return await self._impl.wait_state_change()

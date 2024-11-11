@@ -630,10 +630,12 @@ class Error(Multi_func):
             self._addr_err,
             [self._device.holding_registers.get_single_val(self._addr_err)],
         )
-        for a, e in zip([self._addr_01 ,self._addr_02, self._addr_03, self._addr_04, self._addr_05],  [self.Error.E2, self.Error.E3, self.Error.E4, self.Error.E5, self.Error.E6]):
+        for a, e in zip(
+            [self._addr_01, self._addr_02, self._addr_03, self._addr_04, self._addr_05],
+            [self.Error.E2, self.Error.E3, self.Error.E4, self.Error.E5, self.Error.E6],
+        ):
             self._set_change_callb_0X_helper(
-                [self._device.holding_registers.get_single_val(a)],
-                e
+                [self._device.holding_registers.get_single_val(a)], e
             )
 
         return list(self._ecs)
