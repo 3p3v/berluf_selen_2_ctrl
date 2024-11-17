@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="berluf_selen_2_ctrl",
-    version="0.2.0",
+    version="0.2.2",
     description="Package for controlling Berluf Selen 2 recuperator.",
     url="https://github.com/3p3v/berluf_selen_2_ctrl",
     author="Adam Golecki",
@@ -10,7 +10,7 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
-        "pymodbus_3p3v==3.7.4.3",
+        "pymodbus_3p3v==3.7.4.5",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

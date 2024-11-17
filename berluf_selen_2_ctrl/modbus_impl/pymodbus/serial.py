@@ -6,8 +6,8 @@ from ...modbus_slave.validator import Setter_validator
 from ...modbus_slave.intf import Device_buildable_intf, Device_async_intf
 from ...modbus_slave.serial import Serial_conf, Device_serial_intf_factory
 from .memory import Pymodbus_memory
-from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
-from pymodbus.server import ModbusSerialServer
+from pymodbus_3p3v.datastore import ModbusSlaveContext, ModbusServerContext
+from pymodbus_3p3v.server import ModbusSerialServer
 
 import asyncio
 from asyncio import Event

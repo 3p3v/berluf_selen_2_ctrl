@@ -5,7 +5,7 @@ from ...modbus_slave.validator import (
 )
 from ...modbus_slave.memory import Memory_rw
 from ...modbus_slave.observer_func.callb import Callb_store, Invoke_callb_store
-from pymodbus.datastore import ModbusSparseDataBlock
+from pymodbus_3p3v.datastore import ModbusSparseDataBlock
 
 
 class Pymodbus_memory(Memory_rw, ModbusSparseDataBlock):  # TODO change to proxy
