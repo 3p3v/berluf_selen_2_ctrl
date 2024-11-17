@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="berluf_selen_2",
-    version="0.1.7",
+    name="berluf_selen_2_ctrl",
+    version="0.2.0",
     description="Package for controlling Berluf Selen 2 recuperator.",
-    url="https://github.com/3p3v/berluf_selen_2",
+    url="https://github.com/3p3v/berluf_selen_2_ctrl",
     author="Adam Golecki",
     author_email="adam@golecki.pl",
     license="MIT",

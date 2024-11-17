@@ -1,7 +1,7 @@
 {
     "python.testing.pytestArgs": [
-        "berluf_selen_2/recup/tests",
-        "berluf_selen_2/modbus_slave/tests"
+        "berluf_selen_2_ctrl/recup/tests",
+        "berluf_selen_2_ctrl/modbus_slave/tests"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true

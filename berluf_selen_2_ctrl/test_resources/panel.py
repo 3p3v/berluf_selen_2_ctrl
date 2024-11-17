@@ -1,19 +1,19 @@
 """Example of Selen 2 init."""
 
 # Pymodbus
-from berluf_selen_2.modbus_impl.asyncio.timer import (
+from berluf_selen_2_ctrl.modbus_impl.asyncio.timer import (
     Asyncio_timer_factory,
 )
-from berluf_selen_2.modbus_impl.pymodbus.serial import Pymodbus_serial_intf_factory
+from berluf_selen_2_ctrl.modbus_impl.pymodbus.serial import Pymodbus_serial_intf_factory
 
 # Recuperator
-from berluf_selen_2.recup.serial import (
+from berluf_selen_2_ctrl.recup.serial import (
     Recup_serial_intf,
 )
-from berluf_selen_2.recup import device as recup_device
+from berluf_selen_2_ctrl.recup import device as recup_device
 
 # Functions
-from berluf_selen_2.recup import funcs as recup_funcs
+from berluf_selen_2_ctrl.recup import funcs as recup_funcs
 
 import asyncio
 
