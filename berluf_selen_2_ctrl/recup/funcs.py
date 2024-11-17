@@ -157,7 +157,7 @@ class Fan_linear_conv(Fan_conv):
 
     @override
     def _from_real_to_conv(self, val: int) -> int:
-        return max(round(1.1 * val - 9.9), 0)
+        return max(round((99 * val - 792) / 91), 0)
 
     @override
     def _from_conv_to_real(self, val: int) -> int:
@@ -166,7 +166,7 @@ class Fan_linear_conv(Fan_conv):
                 f"Provided value ({val}) is not withon 0 and 99, so it cannot be converted."
             )
 
-        return round(10 / 11 * val + 9)
+        return round((91 * val + 792) / 99)
 
 
 class Fan_base:  # TODO should exhaust's val be checked?
