@@ -70,7 +70,11 @@ class Test_supply_fan(Base_test_fan):
         return func.Supply_fan(device, func.Fan_non_conv())
 
     def test_set(self, fixt: func.Fan_base):
-        self.set_helper(fixt, 0, 99)
+        min_ = fixt.get_min()
+        max_ = fixt.get_max()
+        assert min_ == 0
+        assert max_ == 99
+        self.set_helper(fixt, min_, max_)
 
 
 class Test_supply_fan_linear(Test_supply_fan):
@@ -87,11 +91,20 @@ class Test_exhaust_fan(Base_test_fan):
         self.supply = func.Supply_fan(device, func.Fan_non_conv())
         return func.Exhaust_fan(device, func.Fan_non_conv())
 
+    def _get_offset(self, fixt: func.Exhaust_fan) -> int:
+        return self.supply.get() - fixt.get()
+
     def test_set(self, fixt: func.Exhaust_fan):
-        for i in range(0, 100):
+        for i in range(self.supply.get_min(), self.supply.get_max() + 1):
+            offset = self._get_offset(fixt)
             self.supply.set(i)
-            min_ = max(0, i - 20)
-            max_ = min(99, i)
+
+            # Check if offset not changed
+            assert self._get_offset(fixt) == offset
+
+            # Check min max
+            min_ = max(self.supply.get_min(), i - 20)
+            max_ = min(self.supply.get_max(), i)
             assert fixt.get_min() == min_
             assert fixt.get_max() == max_
             self.set_helper(fixt, min_, max_)

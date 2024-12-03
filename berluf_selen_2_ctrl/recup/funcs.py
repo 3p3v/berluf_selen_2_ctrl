@@ -193,10 +193,20 @@ class Fan_base:  # TODO should exhaust's val be checked?
         """Get speed in %."""
         raise NotImplementedError()
 
+    def get_max(self) -> int:
+        """Get max settable value."""
+        raise NotImplementedError()
+
+    def get_min(self) -> int:
+        """Get min settable value."""
+        raise NotImplementedError()
+
 
 # %%
 class Exhaust_fan(Multi_func, Fan_base):
     _addr = Fan_base._addr_exhaust
+    # Minimum offset between supply and exhaust
+    _supply_exhaust_offset = 20
 
     def __init__(
         self,
@@ -208,14 +218,16 @@ class Exhaust_fan(Multi_func, Fan_base):
         Fan_base.__init__(self, conv)
         self._usr_callble = usr_callble
         # Set value based on supply
-        sup_val = self._device.holding_registers.get_single_val(self._addr_supply)
+        self._sup_val = self._device.holding_registers.get_single_val(self._addr_supply)
         self._holding_registers_setter = self._device.holding_registers.get_setter(
             {
                 self._addr: [
                     Many_handler(
                         [
-                            Bigger_equal_handler(sup_val - 20),
-                            Smaller_equal_handler(sup_val),
+                            Bigger_equal_handler(
+                                self._sup_val - self._supply_exhaust_offset
+                            ),
+                            Smaller_equal_handler(self._sup_val),
                         ]
                     )
                 ],
@@ -242,18 +254,14 @@ class Exhaust_fan(Multi_func, Fan_base):
         return val
 
     def _get_min(self, val: int) -> int:
-        return max(val - 20, 0)
+        return max(val - self._supply_exhaust_offset, 0)
 
-    def _get_val(self, val_min: int, val_max: int) -> int:
+    def _get_val(self, sup_val: int) -> int:
         exh_val = self._device.holding_registers.get_single_val(self._addr)
-        if exh_val > val_max:
-            self._holding_registers_setter.set_single_val(self._addr, val_max)
-            exh_val = val_max
-        elif exh_val < val_min:
-            self._holding_registers_setter.set_single_val(self._addr, val_min)
-            exh_val = val_max
-
-        return exh_val
+        offset = (
+            self._sup_val - exh_val
+        )  # offset between supply and exhaust before change
+        return sup_val - offset  # new exhaust value with same offset
 
     def _exhaust_callb(self, val: int) -> None:
         (val_min, val_max) = self._get_min_max(
@@ -269,16 +277,17 @@ class Exhaust_fan(Multi_func, Fan_base):
         if self._usr_callble is not None:
             self._usr_callble(val, val_min, val_max)
 
-    def _supply_callb(self, val: int) -> None:
+    def _supply_callb(self, sup_val: int) -> None:
         # Update handler so the exhaust can be only >= supply - 20 || <= supply
-        (val_min, val_max) = self._get_min_max(val)
+        (val_min, val_max) = self._get_min_max(sup_val)
         self._holding_registers_setter.update_handler(
             self._addr,
             Many_handler(
                 [Bigger_equal_handler(val_min), Smaller_equal_handler(val_max)]
             ),
         )
-        val = self._get_val(val_min, val_max)
+        val = self._get_val(sup_val)
+        self._sup_val = sup_val  # update supply
         self._holding_registers_setter.set_single_val(self._addr, val)
         self._usr_callback(
             self._conv._from_real_to_conv(val),
@@ -297,6 +306,7 @@ class Exhaust_fan(Multi_func, Fan_base):
         """Get exhaust in %."""
         return self._device.holding_registers.get_single_val(self._addr)
 
+    @override
     def get_max(self) -> int:
         return self._conv._from_real_to_conv(
             self._get_max(
@@ -304,6 +314,7 @@ class Exhaust_fan(Multi_func, Fan_base):
             )
         )
 
+    @override
     def get_min(self) -> int:
         return self._conv._from_real_to_conv(
             self._get_min(
@@ -314,6 +325,8 @@ class Exhaust_fan(Multi_func, Fan_base):
 
 class Supply_fan(Common_func, Fan_base):
     _addr = Fan_base._addr_supply
+    _min = 0
+    _max = 99
 
     def __init__(
         self,
@@ -327,7 +340,12 @@ class Supply_fan(Common_func, Fan_base):
         self._holding_registers_setter = self._device.holding_registers.get_setter(
             {
                 self._addr: [
-                    Many_handler([Bigger_equal_handler(0), Smaller_equal_handler(99)])
+                    Many_handler(
+                        [
+                            Bigger_equal_handler(self._min),
+                            Smaller_equal_handler(self._max),
+                        ]
+                    )
                 ],
             }
         )
@@ -350,6 +368,14 @@ class Supply_fan(Common_func, Fan_base):
     def _get(self) -> int:
         """Get supply in %."""
         return self._device.holding_registers.get_single_val(self._addr)
+
+    @override
+    def get_max(self) -> int:
+        return self._max
+
+    @override
+    def get_min(self) -> int:
+        return self._min
 
 
 # %%
