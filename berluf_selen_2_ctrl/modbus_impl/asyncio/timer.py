@@ -31,7 +31,7 @@ class Asyncio_timer(Timer):
             await self._stop_job()
             return
 
-    async def _stop_job(self):
+    async def _stop_job(self) -> None:
         # Do not cancel if called from _job procedure
         if self._task is not None:
             self._task.cancel()
@@ -43,7 +43,7 @@ class Asyncio_timer(Timer):
 
         # Start timer again if user requested in the meanwhile (pending start if _if_on but the task was not started)
         if self._is_on is True:
-            self._task = asyncio.ensure_future(self._job())
+            self._task = self._run_job()
 
         self._cancel_in_progress = False
 
@@ -53,7 +53,7 @@ class Asyncio_timer(Timer):
             self._is_on = True
             # Check if cancellation already in progress (task will be started in the stop procedure)
             if self._cancel_in_progress is False:
-                self._task = asyncio.ensure_future(self._job())
+                self._task = self._run_job()
         else:
             raise RuntimeError("Timer already started.")
 
@@ -66,9 +66,15 @@ class Asyncio_timer(Timer):
                 # Mark as cancel in progress
                 self._cancel_in_progress = True
                 # Unmark start
-                asyncio.ensure_future(self._stop_job())
+                self._run_stop_job()
         else:
             raise RuntimeError("Timer hasn't started yet.")
+        
+    def _run_stop_job(self) -> asyncio.Task:
+        return asyncio.ensure_future(self._stop_job())
+    
+    def _run_job(self) -> asyncio.Task:
+        return asyncio.ensure_future(self._job())
 
 
 class Asyncio_timer_factory(Timer_factory):
