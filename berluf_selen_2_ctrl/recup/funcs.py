@@ -600,6 +600,7 @@ class Error(Multi_func):
         device: Device,
         timer_factory: Timer_factory,
         usr_callble: Callable[[list[Error]], None] | None = None,
+        timer_start: bool = False
     ):
         """callb is used when error arises"""
         super().__init__(device)
@@ -620,7 +621,8 @@ class Error(Multi_func):
         self._timer = Recup_timeout_manager(
             device, timer_factory, self._reset_callb, self._timeout_callb
         )
-        self._timer.start()
+        if timer_start:
+            self._timer.start()
 
         self._ecs = set()
         self._add_callb(
@@ -648,6 +650,9 @@ class Error(Multi_func):
 
     def cancel(self) -> None:
         self._timer.cancel()
+        
+    def start(self):
+        self._timer.start()
 
     def reset(self) -> list:
         """Reset errors on monitor."""

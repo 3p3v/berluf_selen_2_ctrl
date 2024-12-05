@@ -56,6 +56,7 @@ async def main():
     gwc.set(False)
 
     error = recup_funcs.Error(device=recup, timer_factory=Asyncio_interval_timer_factory(1))
+    error.start()
 
     supply_fan = recup_funcs.Supply_fan(recup, recup_funcs.Fan_non_conv())
 

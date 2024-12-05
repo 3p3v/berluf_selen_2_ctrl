@@ -16,7 +16,7 @@ class Recup_serial_intf(Device_buildable_intf):  # TODO
         impl_builder: Device_serial_intf_factory,
     ):
         self._impl = impl_builder.create_intf(
-            Serial_conf(com, 9600, 1, 8, "O")
+            Serial_conf(com, 9600, 1, 8, "N")
         )  # Has to be odd
         return
 
