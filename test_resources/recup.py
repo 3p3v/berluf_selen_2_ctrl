@@ -60,7 +60,7 @@ class Recup:
 async def main():
     while True:
         cli = ModbusClient(
-            port="/dev/pts/4", baudrate=9600, bytesize=8, parity="N", stopbits=1
+            port="/dev/pts/26", baudrate=9600, bytesize=8, parity="N", stopbits=1
         )
 
         recup = Recup(cli)

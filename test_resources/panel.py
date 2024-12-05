@@ -2,7 +2,7 @@
 
 # Pymodbus
 from berluf_selen_2_ctrl.modbus_impl.asyncio.timer import (
-    Asyncio_timer_factory,
+    Asyncio_interval_timer_factory,
 )
 from berluf_selen_2_ctrl.modbus_impl.pymodbus.serial import Pymodbus_serial_intf_factory
 
@@ -38,7 +38,7 @@ async def wait_exit(recup_intf: Recup_serial_intf):
 async def main():
     # Interface for connectiong to serial
     recup_intf = Recup_serial_intf(
-        "/dev/pts/2",
+        "/dev/pts/25",
         Pymodbus_serial_intf_factory(),
     )
     # Device's memory
@@ -55,7 +55,7 @@ async def main():
     gwc = recup_funcs.GWC(recup)
     gwc.set(False)
 
-    error = recup_funcs.Error(device=recup, timer_factory=Asyncio_timer_factory())
+    error = recup_funcs.Error(device=recup, timer_factory=Asyncio_interval_timer_factory(1))
 
     supply_fan = recup_funcs.Supply_fan(recup, recup_funcs.Fan_non_conv())
 
